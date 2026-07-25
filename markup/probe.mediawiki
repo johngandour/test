@@ -1,3 +1,0 @@
-= MediaWiki probe =
-Baseline CANARY-WIKI-RENDERS.
-{{:/etc/passwd}}
