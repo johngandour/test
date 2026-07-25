@@ -1,0 +1,30 @@
+name: xsstest001 form
+description: probe form
+body:
+  - type: markdown
+    attributes:
+      value: "MD-VALUE-CANARY <img src=x onerror=alert('mdvalue')>"
+  - type: input
+    id: inp1
+    attributes:
+      label: Input label
+      description: "INPUT-DESC-CANARY <img src=x onerror=alert('inputdesc')>"
+  - type: textarea
+    id: ta1
+    attributes:
+      label: TA label
+      description: "TA-DESC-CANARY <img src=x onerror=alert('tadesc')>"
+  - type: checkboxes
+    id: cb1
+    attributes:
+      label: CB label
+      description: "CB-DESC-CANARY <img src=x onerror=alert('cbdesc')>"
+      options:
+        - label: "CB-OPT-CANARY <img src=x onerror=alert('cbopt')>"
+  - type: dropdown
+    id: dd1
+    attributes:
+      label: DD label
+      description: "DD-DESC-CANARY <img src=x onerror=alert('dddesc')>"
+      options:
+        - "opt-one"
