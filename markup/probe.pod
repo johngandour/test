@@ -1,0 +1,7 @@
+=pod
+
+=head1 POD probe
+
+Baseline CANARY-POD-RENDERS.
+
+=cut
