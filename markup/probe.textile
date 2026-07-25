@@ -1,5 +1,0 @@
-h1. Textile probe
-
-Baseline CANARY-TEXTILE-RENDERS.
-
-notextile. <b>raw</b>
